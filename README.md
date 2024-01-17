@@ -12,7 +12,7 @@ npm install @jyotirmay/calendar
 import { Calendar } from "@jyotirmay/calendar";
 
 const cal = new Calendar()
-console.log(JSON.stringify(cal.getMonth()));
+console.log(JSON.stringify(cal.generateMonth()));
 
 /*
 OUTPUT:
