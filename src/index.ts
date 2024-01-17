@@ -1,7 +1,7 @@
 export type DayObject = {
-  day: string;
+  day: Day;
   date: number;
-  month: string;
+  month: Month;
   year: number;
 };
 
@@ -24,6 +24,42 @@ export type Month =
   | "october"
   | "november"
   | "december";
+
+export type MonthInNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
+export type DateInNumber =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20
+  | 21
+  | 22
+  | 23
+  | 24
+  | 25
+  | 26
+  | 27
+  | 28
+  | 29
+  | 30
+  | 31;
+
 export type Day =
   | "sunday"
   | "monday"
@@ -33,133 +69,140 @@ export type Day =
   | "friday"
   | "saturday";
 
-export class Calendar {
-  private months: Month[] = [
-    "january",
-    "february",
-    "march",
-    "april",
-    "may",
-    "june",
-    "july",
-    "august",
-    "september",
-    "october",
-    "november",
-    "december",
-  ];
-  private days: Day[] = [
-    "sunday",
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-  ];
+export type DayInNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
+export const Days: Day[] = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
+
+export const Months: Month[] = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
+
+export class Calendar {
   private currentMonth: number;
   private currentYear: number;
   private startDay: number;
 
-  constructor(data?: { year?: number; month?: Month; startDay?: Day }) {
+  constructor(data?: {
+    year?: number;
+    month?: Month | MonthInNumber;
+    startDay?: Day | DayInNumber;
+  }) {
     const today = new Date();
     this.currentMonth = data?.month
-      ? this.months.indexOf(data.month) + 1
-      : today.getMonth() + 1;
+      ? this.monthToNum(data.month)
+      : today.getMonth();
     this.currentYear = data?.year ? data.year : today.getFullYear();
-    this.startDay = data?.startDay ? this.days.indexOf(data.startDay) : 1;
+    this.startDay = data?.startDay ? this.dayToNum(data.startDay) : 1;
   }
 
-  getMonth(options?: {
+  generateMonth(options?: {
     year?: number;
-    month?: Month;
-    startDay?: Day;
-  }): MonthObject {
-    let year = options?.year ? options.year : this.currentYear;
-    let month = options?.month
-      ? this.months.indexOf(options.month) + 1
+    month?: Month | MonthInNumber;
+    startDay?: Day | DayInNumber;
+  }) {
+    const year = options?.year ? options.year : this.currentYear;
+    const month = options?.month
+      ? this.monthToNum(options.month)
       : this.currentMonth;
-    let startDay = options?.startDay
-      ? this.days.indexOf(options.startDay)
+    const startDay = options?.startDay
+      ? this.dayToNum(options.startDay)
       : this.startDay;
 
-    const firstDayOfMonth = new Date(year, month - 1, 1);
-    const lastDayOfPreviousMonth = new Date(year, month - 1, 0);
-    const numberOfDays = new Date(year, month, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const numberOfDaysThisMonth = new Date(year, month + 1, 0).getDate();
 
-    // Adjust the startDay to be between 0 (Sunday) and 6 (Saturday)
-    startDay = ((startDay % 7) + 7) % 7;
+    // Set according to startDay. Eg - 0: sunday, 1: monday ... 6: saturday
+    const weekStartsOnDay = (startDay + Days.length) % Days.length;
+    // Days to go back to dates depending on weekStartsOnDay
+    const daysToGoBack =
+      (firstDayOfMonth.getDay() - weekStartsOnDay + Days.length) % Days.length;
+    // The first day of the week starts after going back to the date
+    const firstDayOfWeek = 1 - daysToGoBack;
+    let generatedMonth: MonthObject = { weeks: {} };
 
-    // Determine the day of the week for the first day of the month
-    const firstDayOfWeek = (firstDayOfMonth.getDay() - startDay + 7) % 7;
+    let currentDay = firstDayOfWeek;
 
-    // Calculate the date for the first day of the week containing January 1st
-    const firstDate = 1 - firstDayOfWeek;
-
-    let currentDay = firstDate;
-    let MONTH: MonthObject = { weeks: {} };
-
-    while (currentDay <= numberOfDays || currentDay <= 0) {
-      const weekNumber = Math.ceil(
-        (currentDay + firstDayOfMonth.getDay() - startDay) / 7
-      );
-
-      if (!MONTH.weeks[weekNumber]) {
-        MONTH.weeks[weekNumber] = [];
+    while (currentDay <= numberOfDaysThisMonth || currentDay <= 0) {
+      let weekNumber = Math.floor((currentDay + firstDayOfMonth.getDay()) / 7) + 1;
+      
+      if (!generatedMonth.weeks[weekNumber]) {
+        generatedMonth.weeks[weekNumber] = [];
       }
 
       for (let i = 0; i < 7; i++) {
-        const currentDate = new Date(year, month - 1, currentDay);
-        const dayName = new Intl.DateTimeFormat("en-US", {
-          weekday: "long",
-        }).format(currentDate);
+        const currentDate = new Date(year, month, currentDay);
+        const dayName = Days[currentDate.getDay()];
 
-        if (currentDay > 0 && currentDay <= numberOfDays) {
-          MONTH.weeks[weekNumber].push({
-            day: dayName.toLowerCase(),
-            date: currentDay,
-            month: this.months[month - 1],
+        if (currentDay > 0 && currentDay <= numberOfDaysThisMonth) {
+          // Dates of the current month
+          generatedMonth.weeks[weekNumber].push({
+            day: dayName,
+            date: currentDay as DateInNumber,
+            month: Months[month],
             year,
           });
         } else {
-          // Add dates from the previous or next month
-          const adjacentMonth = currentDay <= 0 ? month - 1 : month + 1;
-          const isJanuaryToDecemberTransition = currentDay <= 0 && month === 1;
-          const isDecemberToJanuaryTransition =
-            currentDay > numberOfDays && month === 12;
+          // Add dates from the previous / next month
+          const isPreviousMonth = currentDay <= 0;
+          const isNextMonth = currentDay > numberOfDaysThisMonth;
 
-          const adjacentMonthDate = isJanuaryToDecemberTransition
-            ? new Date(
-                lastDayOfPreviousMonth.getFullYear(),
-                lastDayOfPreviousMonth.getMonth(),
-                lastDayOfPreviousMonth.getDate() + currentDay
-              )
-            : isDecemberToJanuaryTransition
-            ? new Date(year + 1, 0, currentDay - numberOfDays)
-            : new Date(year, month, currentDay - numberOfDays);
+          const adjacentYear =
+            isPreviousMonth && month === 0
+              ? year - 1
+              : isNextMonth && month === 11
+              ? year + 1
+              : year;
 
-          const dayNameAdjacent = new Intl.DateTimeFormat("en-US", {
-            weekday: "long",
-          }).format(adjacentMonthDate);
+          const adjacentMonth = isPreviousMonth
+            ? month === 0
+              ? 11
+              : month - 1
+            : isNextMonth
+            ? month === 11
+              ? 0
+              : month + 1
+            : month;
 
-          const monthAdjacent = isDecemberToJanuaryTransition
-            ? "january"
-            : isJanuaryToDecemberTransition
-            ? "december"
-            : this.months[adjacentMonth - 1];
+          const numberOfAdjacentDays = isPreviousMonth
+            ? new Date(adjacentYear, adjacentMonth + 1, 0).getDate() +
+              currentDay
+            : isNextMonth
+            ? currentDay - numberOfDaysThisMonth
+            : currentDay;
 
-          const yearAdjacent = isJanuaryToDecemberTransition
-            ? year - 1
-            : isDecemberToJanuaryTransition
-            ? year + 1
-            : year;
+          const adjacentMonthDate = new Date(
+            adjacentYear,
+            adjacentMonth,
+            numberOfAdjacentDays
+          );
 
-          MONTH.weeks[weekNumber].push({
-            day: dayNameAdjacent.toLowerCase(),
-            date: adjacentMonthDate.getDate(),
-            month: monthAdjacent,
-            year: yearAdjacent,
+          const adjacentDayName = Days[adjacentMonthDate.getDay()];
+          const adjacentMonthName = Months[adjacentMonth];
+
+          generatedMonth.weeks[weekNumber].push({
+            day: adjacentDayName,
+            date: adjacentMonthDate.getDate() as DateInNumber,
+            month: adjacentMonthName,
+            year: adjacentYear,
           });
         }
 
@@ -167,6 +210,29 @@ export class Calendar {
       }
     }
 
-    return MONTH;
+    let keys = Object.keys(generatedMonth.weeks);
+    if(keys.includes('0')){
+      let newKey = 1;
+      let newlyGenerated:MonthObject = { weeks: {} };
+
+      keys.forEach((key: any)=>{
+        newlyGenerated.weeks[newKey] = generatedMonth.weeks[key]
+        newKey++;
+      })
+
+      return newlyGenerated;
+    }
+
+    return generatedMonth;
+  }
+
+  private monthToNum(month: Month | MonthInNumber): number {
+    if (typeof month == "number") return month - 1;
+    return Months.indexOf(month);
+  }
+
+  private dayToNum(day: DayInNumber | Day): number {
+    if (typeof day == "number") return day;
+    return Days.indexOf(day);
   }
 }
