@@ -142,8 +142,9 @@ export class Calendar {
     let currentDay = firstDayOfWeek;
 
     while (currentDay <= numberOfDaysThisMonth || currentDay <= 0) {
-      let weekNumber = Math.floor((currentDay + firstDayOfMonth.getDay()) / 7) + 1;
-      
+      let weekNumber =
+        Math.floor((currentDay + firstDayOfMonth.getDay()) / 7) + 1;
+
       if (!generatedMonth.weeks[weekNumber]) {
         generatedMonth.weeks[weekNumber] = [];
       }
@@ -211,19 +212,38 @@ export class Calendar {
     }
 
     let keys = Object.keys(generatedMonth.weeks);
-    if(keys.includes('0')){
+    if (keys.includes("0")) {
       let newKey = 1;
-      let newlyGenerated:MonthObject = { weeks: {} };
+      let newlyGenerated: MonthObject = { weeks: {} };
 
-      keys.forEach((key: any)=>{
-        newlyGenerated.weeks[newKey] = generatedMonth.weeks[key]
+      keys.forEach((key: any) => {
+        newlyGenerated.weeks[newKey] = generatedMonth.weeks[key];
         newKey++;
-      })
+      });
 
       return newlyGenerated;
     }
 
     return generatedMonth;
+  }
+
+  getWeekNumber(date: Date, startDay?: DayInNumber | Day): number {
+    const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+    const dayOfWeekStart = monthStart.getDay();
+
+    let weekStartDay = startDay ? this.dayToNum(startDay) : this.startDay;
+
+    const adjustedStartDay = (dayOfWeekStart - weekStartDay + 7) % 7;
+
+    const firstWeekStart = new Date(monthStart);
+    firstWeekStart.setDate(1 - adjustedStartDay);
+
+    const diffInDays = Math.floor(
+      (date.getTime() - firstWeekStart.getTime()) / (24 * 60 * 60 * 1000)
+    );
+    const weekNumber = Math.floor(diffInDays / 7) + 1;
+
+    return weekNumber;
   }
 
   private monthToNum(month: Month | MonthInNumber): number {
