@@ -1,6 +1,6 @@
 {
   "name": "@jyotirmay/calendar",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "description": "",
   "main": "./dist/cjs/index.js",
   "exports": {
