@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "build": "rimraf dist && tsc && tsc -p tsconfig.cjs.json"
+    "build": "rimraf dist && tsc && tsc -p tsconfig.esm.json"
   },
   "repository": {
     "type": "git",
