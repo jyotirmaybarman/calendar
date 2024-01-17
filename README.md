@@ -11,8 +11,9 @@ npm install @jyotirmay/calendar
 ```js
 import { Calendar } from "@jyotirmay/calendar";
 
-const cal = new Calendar()
-console.log(JSON.stringify(cal.generateMonth()));
+const cal = new Calendar({ startDay: "monday" })
+console.log(cal.getWeekNumber(new Date('2024-01-25'))); // Out: 4
+console.log(JSON.stringify(cal.generateMonth({ month: "january", year: 2024 })));
 
 /*
 OUTPUT:
